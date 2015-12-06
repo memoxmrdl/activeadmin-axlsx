@@ -74,7 +74,7 @@ module ActiveAdmin
 
       # This is the I18n scope that will be used when looking up your
       # colum names in the current I18n locale.
-      # If you set it to [:active_admin, :resources, :posts] the 
+      # If you set it to [:active_admin, :resources, :posts] the
       # serializer will render the value at active_admin.resources.posts.title in the
       # current translations
       # @note If you do not set this, the column name will be titleized.
@@ -112,12 +112,20 @@ module ActiveAdmin
         @columns = []
       end
 
+      def whitelist=(columns)
+        @columns = columns.reduce([]) { |a, c| a << Column.new(c) }
+      end
+
       # Add a column
       # @param [Symbol] name The name of the column.
       # @param [Proc] block A block of code that is executed on the resource
       #                     when generating row data for this column.
       def column(name, &block)
-        @columns << Column.new(name, block)
+        if column = columns.find {|c| c.name.to_s == name.to_s }
+          column.data = block
+        else
+          @columns << Column.new(name, block)
+        end
       end
 
       # removes columns by name
@@ -145,7 +153,7 @@ module ActiveAdmin
           @data = block || @name
         end
 
-        attr_reader :name, :data
+        attr_accessor :name, :data
 
         def localized_name(i18n_scope = nil)
           return name.to_s.titleize unless i18n_scope
